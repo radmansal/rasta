@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>داشبورد رستا</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --bg: #f6f8fc;
+            --surface: rgba(255, 255, 255, 0.88);
+            --surface-solid: #ffffff;
+            --surface-soft: #f0f4ff;
+            --text: #182033;
+            --muted: #68738a;
+            --primary: #5b5ce2;
+            --primary-dark: #4748c7;
+            --primary-soft: #e9e9ff;
+            --success: #159c6a;
+            --danger: #dc3f55;
+            --border: rgba(24, 32, 51, 0.1);
+            --shadow: 0 20px 60px rgba(42, 52, 91, 0.12);
+            --shadow-soft: 0 8px 30px rgba(42, 52, 91, 0.08);
+            --radius-lg: 28px;
+            --radius-md: 18px;
+            --radius-sm: 12px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                color-scheme: dark;
+                --bg: #0d1120;
+                --surface: rgba(24, 30, 51, 0.9);
+                --surface-solid: #181e33;
+                --surface-soft: #212944;
+                --text: #f4f6ff;
+                --muted: #a8b0c4;
+                --primary: #8b8df8;
+                --primary-dark: #7375e8;
+                --primary-soft: rgba(139, 141, 248, 0.14);
+                --success: #38c995;
+                --danger: #ff6679;
+                --border: rgba(255, 255, 255, 0.1);
+                --shadow: 0 20px 60px rgba(0, 0, 0, 0.32);
+                --shadow-soft: 0 8px 30px rgba(0, 0, 0, 0.2);
+            }
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+        html { min-height: 100%; scroll-behavior: smooth; }
+        body {
+            min-height: 100vh; margin: 0; padding: clamp(18px, 4vw, 56px); overflow-x: hidden;
+            font-family: Vazirmatn, IRANSansX, Tahoma, system-ui, -apple-system, sans-serif;
+            line-height: 1.7; color: var(--text);
+            background: radial-gradient(circle at 10% 0%, rgba(99, 102, 241, 0.2), transparent 30rem),
+                        radial-gradient(circle at 100% 30%, rgba(14, 165, 233, 0.14), transparent 30rem),
+                        var(--bg);
+            -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+        }
+        body::before {
+            position: fixed; inset: 0; z-index: -1; pointer-events: none; content: ""; opacity: 0.35;
+            background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+            background-size: 42px 42px; mask-image: linear-gradient(to bottom, black, transparent 70%);
+        }
+        .container {
+            width: min(100%, 1040px); margin-inline: auto; padding: clamp(24px, 5vw, 48px);
+            background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+            box-shadow: var(--shadow); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        }
+
+        /* ✅ استایل‌های هدر و منو */
+        .main-header {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            position: relative;
+            width: 100%;
+        }
+
+        .brand-title {
+            font-size: clamp(1.8rem, 5vw, 2.8rem);
+            font-weight: 850;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 25px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--muted);
+            font-weight: 600;
+            transition: color 0.2s;
+            font-size: 1.05rem;
+            position: relative;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--primary);
+        }
+
+        .header-actions {
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+
+        .btn-logout {
+            background: var(--danger); color: white; border: none; padding: 8px 16px;
+            border-radius: var(--radius-sm); cursor: pointer; font-weight: bold;
+        }
+
+        .stats {
+            display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-block-start: 34px;
+        }
+        .stat-box {
+            position: relative; width: auto; min-height: 132px; padding: 20px 14px; overflow: hidden;
+            color: var(--muted); font-size: 0.92rem; font-weight: 600;
+            background: var(--surface-soft); border: 1px solid var(--border);
+            border-radius: var(--radius-md); box-shadow: var(--shadow-soft);
+            transition: transform 180ms ease, border-color 180ms ease;
+        }
+        .stat-box::after {
+            position: absolute; inset-inline-end: -24px; inset-block-end: -34px; width: 90px; height: 90px;
+            content: ""; background: var(--primary); border-radius: 50%; opacity: 0.08;
+        }
+        .stat-box:hover { transform: translateY(-4px); border-color: color-mix(in srgb, var(--primary), transparent 55%); }
+        .stat-number {
+            margin-block-end: 4px; font-size: clamp(1.8rem, 4vw, 2.5rem); line-height: 1.25;
+            font-weight: 850; color: var(--primary); font-variant-numeric: tabular-nums;
+        }
+
+        /* ✅ استایل‌های جدید برای فرم ادغام شده */
+        .auth-container {
+            max-width: 450px;
+            margin: 40px auto 0;
+            background: var(--surface-solid);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-soft);
+            overflow: hidden;
+        }
+
+        .auth-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface-soft);
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--muted);
+            transition: all 0.2s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .auth-tab.active {
+            color: var(--primary);
+            background: var(--surface-solid);
+            border-bottom-color: var(--primary);
+        }
+
+        .auth-form {
+            padding: 30px;
+            display: none; /* پیش‌فرض مخفی */
+        }
+
+        .auth-form.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        input, select, button {
+            width: 100%; min-height: 48px; margin: 6px 0; padding: 11px 14px;
+            font: inherit; border-radius: var(--radius-sm);
+        }
+        input, select {
+            color: var(--text); background: var(--bg); border: 1px solid var(--border);
+            outline: none; transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+        }
+        input::placeholder { color: var(--muted); opacity: 0.85; }
+        input:focus, select:focus { background: var(--surface-solid); border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-soft); }
+        
+        .btn-submit {
+            margin-block-start: 12px; color: #fff; font-weight: 750;
+            background: linear-gradient(135deg, var(--primary), #7274ef); border: 0;
+            box-shadow: 0 10px 20px rgba(91, 92, 226, 0.24); cursor: pointer;
+            transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+        }
+        .btn-submit:hover { transform: translateY(-2px); filter: brightness(1.04); box-shadow: 0 14px 26px rgba(91, 92, 226, 0.3); }
+        
+        .message { min-height: 20px; margin-block-start: 8px; color: var(--danger); font-size: 0.9rem; font-weight: 650; text-align: center; }
+        .hidden { display: none !important; }
+        
+        .welcome-view { text-align: center; padding: 40px 0; }
+        .btn-profile {
+            display: inline-flex; align-items: center; justify-content: center;
+            min-height: 44px; margin-block-start: 12px; padding-inline: 16px;
+            color: var(--primary); font-weight: 700; text-decoration: none;
+            background: var(--primary-soft); border-radius: 999px;
+            transition: transform 180ms ease, background-color 180ms ease;
+        }
+        .btn-profile:hover { transform: translateY(-2px); background: color-mix(in srgb, var(--primary-soft), var(--primary) 10%); }
+
+        :focus-visible { outline: 3px solid color-mix(in srgb, var(--primary), transparent 35%); outline-offset: 3px; }
+        
+        @media (max-width: 820px) { 
+            .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } 
+            .header-actions { position: static; margin-top: 10px; }
+        }
+        @media (max-width: 480px) {
+            body { padding: 12px; } .container { padding: 20px 14px; border-radius: 22px; }
+            .stats { gap: 10px; } .stat-box { min-height: 112px; padding: 16px 8px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- ✅ هدر -->
+    <header class="main-header">
+        <div class="brand-title">🎓 سامانه رستا</div>
+        
+        <ul class="nav-links">
+            <li><a href="#" class="nav-link active">خانه</a></li>
+            <li><a href="#" class="nav-link">وبلاگ</a></li>
+            <li><a href="#" class="nav-link">ارتباط با ما</a></li>
+        </ul>
+
+        <div class="header-actions">
+            <button id="logoutBtn" class="btn-logout hidden" onclick="logout()">خروج از حساب</button>
+        </div>
+    </header>
+
+    <!-- بخش آمار -->
+    <div class="stats">
+        <div class="stat-box">
+            <div class="stat-number" id="statStudents">...</div>
+            <div>دانشجویان</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number" id="statTeachers">...</div>
+            <div>معلمان</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number" id="statOpen">...</div>
+            <div>سوالات باز</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number" id="statResolved">...</div>
+            <div>حل شده</div>
+        </div>
+    </div>
+
+    <!-- نمای کاربر لاگین شده -->
+    <div id="loggedInView" class="welcome-view hidden">
+        <h3 style="font-size: 1.5rem; margin-bottom: 10px;">سلام <span id="userNameDisplay"></span> عزیز! 👋</h3>
+        <p style="color: var(--muted);">به داشبورد شخصی خود دسترسی دارید.</p>
+        <a href="profile.html" class="btn-profile">📋 ورود به پروفایل من</a>
+    </div>
+
+    <!-- ✅ بخش احراز هویت ادغام شده -->
+    <div id="guestView" class="auth-container hidden">
+        <div class="auth-tabs">
+            <div class="auth-tab active" onclick="switchTab('login')">ورود</div>
+            <div class="auth-tab" onclick="switchTab('register')">ثبت‌نام</div>
+        </div>
+
+        <!-- فرم ورود -->
+        <form id="loginForm" class="auth-form active">
+            <input type="email" id="lEmail" placeholder="ایمیل" required>
+            <input type="password" id="lPass" placeholder="رمز عبور" required>
+            <div class="message" id="loginMsg"></div>
+            <button type="submit" class="btn-submit">ورود به حساب</button>
+        </form>
+
+        <!-- فرم ثبت‌نام -->
+        <form id="registerForm" class="auth-form">
+            <input type="text" id="rName" placeholder="نام و نام خانوادگی" required>
+            <input type="email" id="rEmail" placeholder="ایمیل" required>
+            <input type="password" id="rPass" placeholder="رمز عبور" required>
+            <select id="rRole">
+                <option value="STUDENT">دانشجو</option>
+                <option value="TEACHER">معلم</option>
+            </select>
+            <div class="message" id="regMsg"></div>
+            <button type="submit" class="btn-submit">ایجاد حساب کاربری</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    const API_URL = "https://fast-clq-mpanel2.runflare.cloud";
+    
+    // بررسی وضعیت لاگین
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user'));
+
+    if (token && user) {
+        document.getElementById('loggedInView').classList.remove('hidden');
+        document.getElementById('guestView').classList.add('hidden');
+        document.getElementById('logoutBtn').classList.remove('hidden');
+        document.getElementById('userNameDisplay').innerText = user.name;
+    } else {
+        document.getElementById('loggedInView').classList.add('hidden');
+        document.getElementById('guestView').classList.remove('hidden');
+        document.getElementById('logoutBtn').classList.add('hidden');
+    }
+
+    function logout() {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.reload();
+    }
+
+    // تابع تغییر تب
+    function switchTab(tabName) {
+        const tabs = document.querySelectorAll('.auth-tab');
+        const forms = document.querySelectorAll('.auth-form');
+        
+        tabs.forEach(t => t.classList.remove('active'));
+        forms.forEach(f => f.classList.remove('active'));
+
+        if (tabName === 'login') {
+            tabs[0].classList.add('active');
+            document.getElementById('loginForm').classList.add('active');
+        } else {
+            tabs[1].classList.add('active');
+            document.getElementById('registerForm').classList.add('active');
+        }
+    }
+
+    async function loadStats() {
+        try {
+            const res = await fetch(`${API_URL}/api/stats`);
+            const data = await res.json();
+            document.getElementById('statStudents').innerText = data.total_students;
+            document.getElementById('statTeachers').innerText = data.total_teachers;
+            document.getElementById('statOpen').innerText = data.open_questions;
+            document.getElementById('statResolved').innerText = data.resolved_questions;
+        } catch (e) { console.error("Error loading stats"); }
+    }
+    loadStats();
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('lEmail').value;
+        const password = document.getElementById('lPass').value;
+        const msg = document.getElementById('loginMsg');
+
+        try {
+            const res = await fetch(`${API_URL}/api/users/login`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ email, password })
+            });
+            
+            if (res.ok) {
+                const data = await res.json();
+                localStorage.setItem('token', data.access_token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+                window.location.reload();
+            } else {
+                const err = await res.json();
+                msg.innerText = err.detail || 'خطا در ورود';
+            }
+        } catch (err) { msg.innerText = 'خطا در ارتباط با سرور'; }
+    });
+
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('rName').value;
+        const email = document.getElementById('rEmail').value;
+        const password = document.getElementById('rPass').value;
+        const role = document.getElementById('rRole').value;
+        const msg = document.getElementById('regMsg');
+
+        try {
+            const res = await fetch(`${API_URL}/api/users/register`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ name, email, password, role })
+            });
+            
+            if (res.ok) {
+                alert('ثبت‌نام موفقیت‌آمیز بود! اکنون وارد شوید.');
+                switchTab('login'); // بعد از ثبت‌نام موفق به تب ورود برو
+                document.getElementById('registerForm').reset();
+            } else {
+                const err = await res.json();
+                msg.innerText = err.detail || 'خطا در ثبت‌نام';
+            }
+        } catch (err) { msg.innerText = 'خطا در ارتباط با سرور'; }
+    });
+</script>
+
+</body>
+</html>
